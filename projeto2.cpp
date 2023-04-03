@@ -41,24 +41,21 @@ void writeVector() {
 
 int maxProfit(int company, int day, int buy) {
 
-    if (day == D){
+    if (day == D) {
         return 0;
     }
-        
+
     if (dp[day][buy] != -1)
         return dp[day][buy];
 
     int prof = 0;
 
     if (buy) {
-        prof = max(-V[company][day] * K + maxProfit(company, day + 1, 0),
-                   0 + maxProfit(company, day + 1, 1)) -
-               R;
-
+        prof = max(-V[company][day] * K - R * K + maxProfit(company, day + 1, 0),
+                   0 + maxProfit(company, day + 1, 1));
     } else {
         prof = max(V[company][day] * K + maxProfit(company, day + 1, 1),
-                   0 + maxProfit(company, day + 1, 0)) -
-               R;
+                   0 + maxProfit(company, day + 1, 0));
     }
 
     return dp[day][buy] = prof;
