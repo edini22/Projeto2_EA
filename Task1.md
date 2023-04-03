@@ -45,26 +45,34 @@ Function f(day, buy):
 ```
 
 # Bottom up
+Nao e necessario guardar o array dp inteiro, mas sim a ultima iteracao compra/venda, isto e, se estamos no dia 3, apenas precisamos do dia 4 (comprar ou vender)
 
 ```
+dp = vector(D, vector(2,0)) 
 dp[D][0] = dp[D][1] = 0
 
-Function BU:
-    for day=D to 0:
+
+
+Function BU(day, buy):
+
+    vector next = (2,0);
+    vector cur = (2,0);
+    next[0] = next[1] = 0
+    for day=D-1 to 0:
         for buy=0 to 1:
             profit = 0  
             if buy:
-                profit = max(-prices[day] + dp[day+1][0], // comprar neste dia
-                                0         + dp[day+1][1]) // vender neste dia 
-                dp[day][buy] = profit
+                profit = max(-prices[day] + next[0], // comprar neste dia
+                                0         + next[1]) // vender neste dia 
+                
             
             // nao se comprou no dia anterior
             else:
-                profit = max(prices[day] +  dp[day+1][1], 
-                                0        +  dp[day+1][0]) 
-                dp[day][buy] = profit
-
-    return dp[0][1]
+                profit = max(prices[day] +  next[1], 
+                                0        +  next[0]) 
+            cur[buy] = profit
+        next = cur;
+    return next[1] 
 
 
 ```

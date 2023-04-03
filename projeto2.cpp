@@ -39,6 +39,7 @@ void writeVector() {
     }
 }
 
+// DP
 int maxProfit(int company, int day, int buy) {
 
     if (day == D) {
@@ -61,11 +62,35 @@ int maxProfit(int company, int day, int buy) {
     return dp[day][buy] = prof;
 }
 
+// Bottom Up
+int maxProfit2(int company) {
+    vector<int> next = vector<int>(2, 0);
+    vector<int> cur = vector<int>(2, 0);
+
+    next[0] = next[1] = 0;
+    for (int day = D - 1; day >= 0; day--) {
+        for (int buy = 0; buy <= 1; buy++) {
+            int prof = 0;
+
+            if (buy) {
+                prof = max(-V[company][day] * K - R * K + next[0],
+                           0 + next[1]);
+            } else {
+                prof = max(V[company][day] * K + next[1],
+                           0 + next[0]);
+            }
+            cur[buy]= prof;
+        }
+        next = cur;
+    }
+    return next[1];
+}
+
 void task1() {
 
     for (int i = 0; i < N; i++) {
-        dp = vector<vector<int>>(D, vector<int>(2, -1));
-        profit = maxProfit(i, 0, 1);
+        // dp = vector<vector<int>>(D, vector<int>(2, -1));
+        profit = maxProfit2(i);
         cout << profit << endl;
     }
 }
