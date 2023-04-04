@@ -25,9 +25,12 @@ int R; // taxa fixa
     (a+b) mod  m = ((a mod  m)+(b mod  m)) mod  m para o numero de esquemas
  */
 
-vector<vector<int>> V;  // vector que em cada linha representa uma empresa e cada coluna representa um dia
-int profit;             // usado para imprimir o lucro total no final
-vector<vector<int>> dp; // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
+vector<vector<int>> V;    // vector que em cada linha representa uma empresa e cada coluna representa um dia
+int profit;               // usado para imprimir o lucro total no final
+vector<vector<int>> dp;   // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
+vector<int> history;      // usado para guardar o historico de compras/vendas ao longo dos dias
+vector<int> history_copy; // usado para duplicar o historico no caso de haver mais alguma possibilidade
+int possibilidades;       // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
 
 void writeVector() {
     int num;
@@ -46,17 +49,35 @@ int maxProfit(int company, int day, int buy) {
         return 0;
     }
 
-    if (dp[day][buy] != -1)
+    if (dp[day][buy] != -1) {
         return dp[day][buy];
+    }
 
     int prof = 0;
 
     if (buy) {
         prof = max(-V[company][day] * K - R * K + maxProfit(company, day + 1, 0),
                    0 + maxProfit(company, day + 1, 1));
+
+        if (prof == -V[company][day] * K - R * K + maxProfit(company, day + 1, 0)) {
+            cout << "Comprei dia" << day + 1 << " DP" << dp[day][buy] << endl;
+            history[day] = K;
+        } else {
+            cout << "Mantive dia" << day + 1 << " DP" << dp[day][buy] << endl;
+            history[day] = 0;
+        }
     } else {
         prof = max(V[company][day] * K + maxProfit(company, day + 1, 1),
                    0 + maxProfit(company, day + 1, 0));
+
+        if (prof == V[company][day] * K + maxProfit(company, day + 1, 1)) {
+            cout << "Vendi dia" << day + 1 << " DP" << dp[day][buy] << endl;
+            history[day] = -K;
+        } else {
+            cout << "Mantive dia" << day + 1 << " DP" << dp[day][buy] << endl;
+            history[day] = 0;
+        }
+        cout << endl;
     }
 
     return dp[day][buy] = prof;
@@ -79,7 +100,7 @@ int maxProfit2(int company) {
                 prof = max(V[company][day] * K + next[1],
                            0 + next[0]);
             }
-            cur[buy]= prof;
+            cur[buy] = prof;
         }
         next = cur;
     }
@@ -87,20 +108,64 @@ int maxProfit2(int company) {
 }
 
 void task1() {
-
     for (int i = 0; i < N; i++) {
-        // dp = vector<vector<int>>(D, vector<int>(2, -1));
         profit = maxProfit2(i);
         cout << profit << endl;
     }
 }
 
+void bestProfit(int company) {
+
+    int last = 1;
+    // usado para saber se a ultima transacao foi compra ou venda
+    for (int day = 0; day < D; day++) {
+
+        cout << "Dia " << day + 1 << " " << dp[day][0] << endl;
+        cout << "Dia " << day + 1 << " " << dp[day][1] << endl;
+        cout << endl;
+        if (day != 0) {
+            if (dp[day][1] == dp[day - 1][1] && dp[day][0] > dp[day - 1][0]) {
+                if(last == 1){
+                    history[day] = -K;
+                    last = -1;
+                }
+            }
+            else if(dp[day][0] == dp[day - 1][0] && dp[day][1] < dp[day-1][1]){
+                if(last == -1){
+                    history[day] = K;
+                    last = 1;
+                }
+            }
+        }
+    }
+}
+
 void task2() {
-    cout << "Nao sei :)" << endl;
+    for (int i = 0; i < N; i++) {
+        dp = vector<vector<int>>(D, vector<int>(2, -1));
+        history = vector<int>(D, 0);
+        profit = maxProfit(i, 0, 1);
+        cout << profit << endl;
+
+        bestProfit(i);
+
+        for (int j = 0; j < D; j++) {
+            cout << history[j] << " ";
+        }
+        cout << endl;
+    }
 }
 
 void task3() {
-    cout << "Nao sei tambem :)" << endl;
+    for (int i = 0; i < N; i++) {
+        dp = vector<vector<int>>(D, vector<int>(2, -1));
+        history = vector<int>(D, 0);
+        history_copy = vector<int>(D, 0);
+        possibilidades = 0;
+        profit = maxProfit(i, 0, 1);
+
+        cout << profit << " " << possibilidades << endl;
+    }
 }
 
 int main() {
@@ -116,7 +181,6 @@ int main() {
 
     writeVector();
 
-    // fazer funcao para o ex ahah
     switch (task) {
     case 1:
         task1();
