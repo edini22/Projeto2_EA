@@ -59,25 +59,21 @@ int maxProfit(int company, int day, int buy) {
         prof = max(-V[company][day] * K - R * K + maxProfit(company, day + 1, 0),
                    0 + maxProfit(company, day + 1, 1));
 
-        if (prof == -V[company][day] * K - R * K + maxProfit(company, day + 1, 0)) {
-            cout << "Comprei dia" << day + 1 << " DP" << dp[day][buy] << endl;
-            history[day] = K;
-        } else {
-            cout << "Mantive dia" << day + 1 << " DP" << dp[day][buy] << endl;
-            history[day] = 0;
-        }
+        // if (prof == -V[company][day] * K - R * K + maxProfit(company, day + 1, 0)) {
+        //     cout << "Comprei dia" << day + 1 << " DP" << dp[day][buy] << endl;
+        // } else {
+        //     cout << "Mantive dia" << day + 1 << " DP" << dp[day][buy] << endl;
+        // }
     } else {
         prof = max(V[company][day] * K + maxProfit(company, day + 1, 1),
                    0 + maxProfit(company, day + 1, 0));
 
-        if (prof == V[company][day] * K + maxProfit(company, day + 1, 1)) {
-            cout << "Vendi dia" << day + 1 << " DP" << dp[day][buy] << endl;
-            history[day] = -K;
-        } else {
-            cout << "Mantive dia" << day + 1 << " DP" << dp[day][buy] << endl;
-            history[day] = 0;
-        }
-        cout << endl;
+        // if (prof == V[company][day] * K + maxProfit(company, day + 1, 1)) {
+        //     cout << "Vendi dia" << day + 1 << " DP" << dp[day][buy] << endl;
+        // } else {
+        //     cout << "Mantive dia" << day + 1 << " DP" << dp[day][buy] << endl;
+        // }
+        // cout << endl;
     }
 
     return dp[day][buy] = prof;
@@ -90,9 +86,9 @@ int maxProfit2(int company) {
 
     next[0] = next[1] = 0;
     for (int day = D - 1; day >= 0; day--) {
+        int prof = 0;
         for (int buy = 0; buy <= 1; buy++) {
-            int prof = 0;
-
+            prof = 0;
             if (buy) {
                 prof = max(-V[company][day] * K - R * K + next[0],
                            0 + next[1]);
@@ -114,27 +110,28 @@ void task1() {
     }
 }
 
-void bestProfit(int company) {
-
-    int last = 1;
-    // usado para saber se a ultima transacao foi compra ou venda
+void bestSequence(int company) {
+    int buy = 1;
     for (int day = 0; day < D; day++) {
 
-        cout << "Dia " << day + 1 << " " << dp[day][0] << endl;
-        cout << "Dia " << day + 1 << " " << dp[day][1] << endl;
-        cout << endl;
-        if (day != 0) {
-            if (dp[day][1] == dp[day - 1][1] && dp[day][0] > dp[day - 1][0]) {
-                if(last == 1){
-                    history[day] = -K;
-                    last = -1;
-                }
+        if (day != D - 1) {
+            int prof = dp[day][buy];
+            if (prof == -V[company][day] * K - R * K + maxProfit(company, day + 1, 0)) {
+                history[day] = K;
+                buy = 0;
+            } else if (prof == V[company][day] * K + maxProfit(company, day + 1, 1)) {
+                history[day] = -K;
+                buy = 1;
+            } else {
+                history[day] = 0;
             }
-            else if(dp[day][0] == dp[day - 1][0] && dp[day][1] < dp[day-1][1]){
-                if(last == -1){
-                    history[day] = K;
-                    last = 1;
-                }
+        } else {
+            
+            // tratar do ultimo elemento
+            if (buy) {
+                history[day] = 0; // vender todas as ações no último dia
+            } else {
+                history[day] = -K; // não há ações para vender no último dia
             }
         }
     }
@@ -142,16 +139,23 @@ void bestProfit(int company) {
 
 void task2() {
     for (int i = 0; i < N; i++) {
-        dp = vector<vector<int>>(D, vector<int>(2, -1));
         history = vector<int>(D, 0);
+
+        // dp
+        dp = vector<vector<int>>(D, vector<int>(2, -1));
         profit = maxProfit(i, 0, 1);
+
+        // bottom up
+        // profit = maxProfit2(i);
         cout << profit << endl;
 
-        bestProfit(i);
+        // bestProfit(i);
+        bestSequence(i);
 
         for (int j = 0; j < D; j++) {
             cout << history[j] << " ";
         }
+
         cout << endl;
     }
 }
