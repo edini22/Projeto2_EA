@@ -25,12 +25,15 @@ int R; // taxa fixa
     (a+b) mod  m = ((a mod  m)+(b mod  m)) mod  m para o numero de esquemas
  */
 
-vector<vector<int>> V;    // vector que em cada linha representa uma empresa e cada coluna representa um dia
+vector<vector<int>> V;     // vector que em cada linha representa uma empresa e cada coluna representa um dia
 long profit;               // usado para imprimir o lucro total no final
 vector<vector<long>> dp;   // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
 vector<long> history;      // usado para guardar o historico de compras/vendas ao longo dos dias
 vector<long> history_copy; // usado para duplicar o historico no caso de haver mais alguma possibilidade
-int possibilidades;       // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
+long long possibilidades;        // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
+
+int num_a;
+long max_profit;
 
 void writeVector() {
     int num;
@@ -147,41 +150,87 @@ void task2() {
     }
 }
 
-long maxProfit3(int company) {
-    vector<vector<int>> next = vector<vector<int>>(2, vector<int>(K, 0));
-    vector<vector<int>> cur = vector<vector<int>>(2, vector<int>(K, 0));
+long long numCombinations(int K, int D) {
+    vector<vector<long long>> dpc(D + 1, vector<long long>(K + 1, 0));
 
-    next[0][0] = next[1][0] = 0;
-    for (int day = D - 1; day >= 0; day--) {
-        long prof = 0;
-        for (int buy = 0; buy <= 1; buy++) {
-            prof = 0;
-            for (int k = 0; k < K; k++) {
-                if (k>0) {
-                    prof = max(-V[company][day] * K - R * K + next[0][k],
-                               0 + next[1][k]);
-                } else {
-                    prof = max(V[company][day] * K + next[1][k],
-                               0 + next[0][k]);
-                }
+    // Caso base: 0 dias e 0 ações compradas
+    dpc[0][0] = 1;
+
+    for (int day = 1; day <= D; day++) {
+        for (int numShares = 0; numShares <= K; numShares++) {
+            // Não compra nenhuma ação no dia atual
+            dpc[day][numShares] = dpc[day - 1][numShares];
+
+            // Compra j ações no dia atual (j varia de 1 até o máximo possível)
+            for (int j = 1; j <= min(numShares, K); j++) {
+                dpc[day][numShares] += dpc[day - 1][numShares - j];
             }
-            cur[buy][0] = prof;
         }
-
-        next = cur;
     }
-    return next[1][K-1];
+
+    return dpc[D][K];
+}
+
+void maxcombinations(int company) {
+    int buy = 1;
+    for (int day = 0; day < D; day++) {
+
+        if (day != D - 1) {
+            long prof = dp[day][buy];
+            if (prof == -V[company][day] * K - R * K + maxProfit(company, day + 1, 0)) {
+                int count = 0;
+                for (int i = day; i < D - 1; i++) { // ficar o ultimo para vender pelo menos !
+                    // ver quantas permutacoes da para fazer com esses num iguais!!
+                    if (V[company][day] == V[company][i]) {
+                        count++;
+                    }
+
+                    else
+                        break;
+                }
+                if (count > 1) {
+                    possibilidades *= numCombinations(K, count);
+                    // cout << "k: " << K << "count: " << count << "possibilidades: " <<possibilidades << endl;
+                }
+                buy = 0;
+            } else if (prof == V[company][day] * K + maxProfit(company, day + 1, 1)) {
+                int count = 0;
+                for (int i = day; i < D; i++) { // ficar o ultimo para vender pelo menos !
+                    // ver quantas permutacoes da para fazer com esses num iguais!!
+                    if (V[company][day] == V[company][i]) {
+                        count++;
+                    }
+
+                    else
+                        break;
+                }
+                if (count > 1) {
+                    possibilidades *= numCombinations(K, count);
+                    // cout << "k: " << K << "count: " << count << "possibilidades: " <<possibilidades << endl;
+                }
+                buy = 1;
+            } 
+        } else {
+
+            // tratar do ultimo elemento
+            // if (buy) {
+            //     history[day] = 0; // vender todas as ações no último dia
+            // } else {
+            //     history[day] = -K; // não há ações para vender no último dia
+            // }
+        }
+    }
 }
 
 void task3() {
     for (int i = 0; i < N; i++) {
-        // dp = vector<vector<long>>(D, vector<long>(2, -1));
-        history = vector<long>(D, 0);
-        history_copy = vector<long>(D, 0);
+        num_a = 0;
+        // dp
+        dp = vector<vector<long>>(D, vector<long>(2, -1));
         possibilidades = 1;
-        profit = maxProfit2(i);
-
-        cout << profit << " " << possibilidades << endl;
+        max_profit = maxProfit(i, 0, 1);
+        maxcombinations(i);
+        cout << max_profit << " " << possibilidades << endl;
     }
 }
 
