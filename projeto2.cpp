@@ -235,18 +235,25 @@ long maxPossibilities(int company) {
     // usados para contar quantos outros dias podia ter sido vendido ou comprado
     int possible_sells = 0;
     int possible_buys = 0;
+    long combinations = 0;
+
     while (day >= 0) {
 
         // trabalhar na janela de min a min
         if ((history[day] < 0 && index > day) || day == 0) {
-            for (int i = day; i < index; i++) {
+            possible_sells = 0;
+            possible_buys = 0;
+            for (int i = day; i <= index; i++) {
                 if (V[company][i] == min)
-                    possible_sells++;
-                else if (V[company][i] == max)
                     possible_buys++;
+                else if (V[company][i] == max)
+                    possible_sells++;
             }
             cout << "Janela: " << day << "-" << index << endl;
-        } 
+            cout << "Possiveis compras: " << possible_buys << endl;
+            cout << "Possiveis vendas: " << possible_sells << endl
+                 << endl;
+        }
 
         // Definir a janela a trabalhar
         if (history[day] > 0) {
@@ -261,7 +268,7 @@ long maxPossibilities(int company) {
         day--;
     }
 
-    return 1;
+    return combinations;
 }
 
 void task3() {
