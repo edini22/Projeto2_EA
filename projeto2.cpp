@@ -30,7 +30,7 @@ long profit;               // usado para imprimir o lucro total no final
 vector<vector<long>> dp;   // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
 vector<long> history;      // usado para guardar o historico de compras/vendas ao longo dos dias
 vector<long> history_copy; // usado para duplicar o historico no caso de haver mais alguma possibilidade
-long long possibilidades;        // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
+long long possibilidades;  // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
 
 int num_a;
 long max_profit;
@@ -209,7 +209,7 @@ void maxcombinations(int company) {
                     // cout << "k: " << K << "count: " << count << "possibilidades: " <<possibilidades << endl;
                 }
                 buy = 1;
-            } 
+            }
         } else {
 
             // tratar do ultimo elemento
@@ -222,14 +222,63 @@ void maxcombinations(int company) {
     }
 }
 
+/* optei por comecar do fim pq assim nao temos o problema da ultima janela ir ate ao fim
+   se comecasse do inicio teria na ultima vez de ir ate ao ultimo dia e corria o risco de contar os mins mais que uma vez
+   ao comecar do fim, como compramos sempre na primeira vez que o preco e o min, nao preciso de fazer excessoes para a ultima janela
+*/
+long maxPossibilities(int company) {
+    int max = 0;
+    int min = 0;
+    int index = 0;
+    int day = D - 1;
+
+    // usados para contar quantos outros dias podia ter sido vendido ou comprado
+    int possible_sells = 0;
+    int possible_buys = 0;
+    while (day >= 0) {
+
+        // trabalhar na janela de min a min
+        if ((history[day] < 0 && index > day) || day == 0) {
+            for (int i = day; i < index; i++) {
+                if (V[company][i] == min)
+                    possible_sells++;
+                else if (V[company][i] == max)
+                    possible_buys++;
+            }
+            cout << "Janela: " << day << "-" << index << endl;
+        } 
+
+        // Definir a janela a trabalhar
+        if (history[day] > 0) {
+            // compra no menor preco
+            min = V[company][day];
+        } else if (history[day] < 0) {
+            // vende no maior preco
+            max = V[company][day];
+            index = day;
+        }
+
+        day--;
+    }
+
+    return 1;
+}
+
 void task3() {
     for (int i = 0; i < N; i++) {
         num_a = 0;
         // dp
         dp = vector<vector<long>>(D, vector<long>(2, -1));
-        possibilidades = 1;
+        history = vector<long>(D, 0);
+
+        // history
         max_profit = maxProfit(i, 0, 1);
-        maxcombinations(i);
+        bestSequence(i);
+
+        // possibilities
+        // possibilidades = 1;
+        // maxcombinations(i);
+        possibilidades = maxPossibilities(i);
         cout << max_profit << " " << possibilidades << endl;
     }
 }
