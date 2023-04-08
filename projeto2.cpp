@@ -1,3 +1,4 @@
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -222,10 +223,19 @@ void maxcombinations(int company) {
     }
 }
 
-/* optei por comecar do fim pq assim nao temos o problema da ultima janela ir ate ao fim
-   se comecasse do inicio teria na ultima vez de ir ate ao ultimo dia e corria o risco de contar os mins mais que uma vez
-   ao comecar do fim, como compramos sempre na primeira vez que o preco e o min, nao preciso de fazer excessoes para a ultima janela
-*/
+long factorial(long a) {
+
+    if (a == 1)
+        return a;
+    else
+        return a * factorial(a - 1);
+}
+
+long comb(int n, int p) {
+    return  factorial(n) / (factorial (p) * factorial(n-p));
+}
+
+
 long maxPossibilities(int company) {
     int max = 0;
     int min = 0;
@@ -253,6 +263,11 @@ long maxPossibilities(int company) {
             cout << "Possiveis compras: " << possible_buys << endl;
             cout << "Possiveis vendas: " << possible_sells << endl
                  << endl;
+
+            // TODO: fazer combinacoes tendo em conta que pode haver mais dias que K (7 dias K possiveis)
+            // ou pode haver mais que uma compra por dia (0-K compras)
+            combinations += comb(K, possible_buys);
+            combinations += comb(K, possible_sells);
         }
 
         // Definir a janela a trabalhar
