@@ -232,55 +232,72 @@ long factorial(long a) {
 }
 
 long comb(int n, int p) {
-    return  factorial(n) / (factorial (p) * factorial(n-p));
+    return factorial(n) / (factorial(p) * factorial(n - p));
 }
-
 
 long maxPossibilities(int company) {
     int max = 0;
     int min = 0;
-    int index = 0;
-    int day = D - 1;
+    int index = D;
+    int day = 0;
 
     // usados para contar quantos outros dias podia ter sido vendido ou comprado
     int possible_sells = 0;
     int possible_buys = 0;
-    long combinations = 0;
+    long combinations = 1;
 
-    while (day >= 0) {
+    while (day < D) {
 
         // trabalhar na janela de min a min
-        if ((history[day] < 0 && index > day) || day == 0) {
+        if (history[day] > 0 && index < day) {
             possible_sells = 0;
             possible_buys = 0;
-            for (int i = day; i <= index; i++) {
+            for (int i = index; i < day; i++) {
                 if (V[company][i] == min)
                     possible_buys++;
                 else if (V[company][i] == max)
                     possible_sells++;
             }
-            cout << "Janela: " << day << "-" << index << endl;
-            cout << "Possiveis compras: " << possible_buys << endl;
-            cout << "Possiveis vendas: " << possible_sells << endl
-                 << endl;
+            // cout << "Janela: " << index << "-" << day << endl;
+            // cout << "Possiveis compras: " << possible_buys << endl;
+            // cout << "Possiveis vendas: " << possible_sells << endl
+            //      << endl;
+            combinations *= numCombinations(K, possible_buys);
+            combinations *= numCombinations(K, possible_sells);
+        } else if (day == D - 1) {
+            if (history[day] < 0)
+                // vende no maior preco
+                max = V[company][day];
+
+            possible_sells = 0;
+            possible_buys = 0;
+            for (int i = index; i <= day; i++) {
+                if (V[company][i] == min)
+                    possible_buys++;
+                else if (V[company][i] == max)
+                    possible_sells++;
+            }
+            // cout << "Janela: " << index << "-" << day << endl;
+            // cout << "Possiveis compras: " << possible_buys << endl;
+            // cout << "Possiveis vendas: " << possible_sells << endl
+            //      << endl;
 
             // TODO: fazer combinacoes tendo em conta que pode haver mais dias que K (7 dias K possiveis)
             // ou pode haver mais que uma compra por dia (0-K compras)
-            combinations += comb(K, possible_buys);
-            combinations += comb(K, possible_sells);
+            combinations *= numCombinations(K, possible_buys);
+            combinations *= numCombinations(K, possible_sells);
         }
 
         // Definir a janela a trabalhar
         if (history[day] > 0) {
             // compra no menor preco
             min = V[company][day];
+            index = day;
         } else if (history[day] < 0) {
             // vende no maior preco
             max = V[company][day];
-            index = day;
         }
-
-        day--;
+        day++;
     }
 
     return combinations;
