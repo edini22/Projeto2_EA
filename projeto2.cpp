@@ -28,6 +28,7 @@ int R; // taxa fixa
 vector<vector<int>> V;                 // vector que em cada linha representa uma empresa e cada coluna representa um dia
 long profit;                           // usado para imprimir o lucro total no final
 vector<vector<long>> dp;               // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
+vector<vector<long>> dp3;              // guardar a info daquele dia com aquele k os caminhos possiveis para cima
 vector<vector<vector<long>>> caminhos; // para contar os caminhos resultantes
 vector<long> history;                  // usado para guardar o historico de compras/vendas ao longo dos dias
 vector<long> history_copy;             // usado para duplicar o historico no caso de haver mais alguma possibilidade
@@ -350,40 +351,36 @@ long bottomUp3(int company) {
     return dp[D - 1][0];
 }
 
-long contaCaminhos(int day, int k) {
+int MOD = 1e9 + 7;
 
-    // for (int day = 0; day < D; day++) {
-    //     for (int k = 0; k < caminhos[day].size(); k++) {
-    //         for (int j = 0; j < caminhos[day][k].size(); j++) {
-    //             cout << caminhos[day][k][j] << ",";
-    //         }
-    //         cout << "\t";
-    //     }
-    //     cout << endl;
-    // }
-    // cout << endl;
-
-    long value = 1;
+void contaCaminhos(int day, int k) {
+    if (dp3[day][k] != -1) {
+        possibilidades = (possibilidades + dp3[day][k]) % MOD;
+        return;
+    }
 
     if (day == 0) {
-        return value;
+        possibilidades = (possibilidades + 1) % MOD;
     } else {
-        value *= caminhos[day][k].size();
+        long aux = possibilidades;
         for (int i = 0; i < caminhos[day][k].size(); i++) {
-            value *= contaCaminhos(day - 1, caminhos[day][k][i]);
+            contaCaminhos(day - 1, caminhos[day][k][i]);
         }
-        return value;
+        dp3[day][k] = (possibilidades - aux) % MOD;
+        // cout << "dp3[" << day << "][" << k << "] = " << dp3[day][k] << endl;
     }
+    return;
 }
 
 void task3() {
-    dp = vector<vector<long>>(D, vector<long>(K + 1, 0));
-
     for (int i = 0; i < N; i++) {
+        dp = vector<vector<long>>(D, vector<long>(K + 1, 0));
+        dp3 = vector<vector<long>>(D, vector<long>(K + 1, -1));
         caminhos.clear();
+        possibilidades = 0;
         profit = bottomUp3(i);
-        long num = contaCaminhos(D - 1, 0);
-        cout << profit << " " << num << endl;
+        contaCaminhos(D - 1, 0);
+        cout << profit << " " << possibilidades << endl;
     }
 }
 
