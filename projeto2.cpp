@@ -2,7 +2,6 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-
 using namespace std;
 
 int task;
@@ -26,15 +25,13 @@ int R; // taxa fixa
     (a+b) mod  m = ((a mod  m)+(b mod  m)) mod  m para o numero de esquemas
  */
 
-vector<vector<int>> V;     // vector que em cada linha representa uma empresa e cada coluna representa um dia
-long profit;               // usado para imprimir o lucro total no final
-vector<vector<long>> dp;   // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
-vector<long> history;      // usado para guardar o historico de compras/vendas ao longo dos dias
-vector<long> history_copy; // usado para duplicar o historico no caso de haver mais alguma possibilidade
-long long possibilidades;  // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
-
-int num_a;
-long max_profit;
+vector<vector<int>> V;                 // vector que em cada linha representa uma empresa e cada coluna representa um dia
+long profit;                           // usado para imprimir o lucro total no final
+vector<vector<long>> dp;               // guardar a info se naquele dia comprou ou vendeu e qual o profit desse caminho
+vector<vector<vector<long>>> caminhos; // para contar os caminhos resultantes
+vector<long> history;                  // usado para guardar o historico de compras/vendas ao longo dos dias
+vector<long> history_copy;             // usado para duplicar o historico no caso de haver mais alguma possibilidade
+long long possibilidades;              // guardar quantas possibilidades de compras/vendas dariam o lucro maximo
 
 void writeVector() {
     int num;
@@ -303,22 +300,90 @@ long maxPossibilities(int company) {
     return combinations;
 }
 
+long bottomUp3(int company) {
+    // preencher o primeiro dia
+    // preencher a primeira linha dos caminhos pois nao ha dia anterior ao primeiro
+    vector<vector<long>> first_day;
+    for (int k = 0; k <= K; k++) {
+        dp[0][k] = -(V[company][0] * k + k * R);
+        first_day.push_back({-1});
+    }
+    caminhos.push_back(first_day);
+
+    // construir DP
+    for (int day = 1; day < D; day++) {
+        vector<vector<long>> caminho;
+        for (int wallet = 0; wallet <= K; wallet++) {
+            long prof = INT16_MIN;
+            vector<long> maxprofit;
+            for (int left = 0; left <= K; left++) {
+                long profit_atual = 0;
+                int diff = abs(wallet - left);
+                if (wallet > left) {
+                    // comprar
+                    profit_atual = dp[day - 1][left] - (V[company][day] * diff + diff * R);
+                } else if (wallet < left) {
+                    // vender
+                    profit_atual = dp[day - 1][left] + V[company][day] * diff;
+                } else {
+                    // manter
+                    profit_atual = dp[day - 1][left];
+                }
+
+                // guardar os lefts que dao o maximo na lista de caminhos
+                if (profit_atual > prof) {
+                    // se for maior limpar a lista porque o maximo anterior nao e o maximo verdadeiro
+                    prof = profit_atual;
+                    maxprofit.clear();
+                    maxprofit.push_back(left);
+                } else if (profit_atual == prof) {
+                    // se for igual adicionar pois pode haver varios caminhos que levem ao mesmo maxprofit
+                    maxprofit.push_back(left);
+                }
+            }
+            caminho.push_back(maxprofit);
+            dp[day][wallet] = prof;
+        }
+        caminhos.push_back(caminho);
+    }
+
+    return dp[D - 1][0];
+}
+
+long contaCaminhos(int day, int k) {
+
+    // for (int day = 0; day < D; day++) {
+    //     for (int k = 0; k < caminhos[day].size(); k++) {
+    //         for (int j = 0; j < caminhos[day][k].size(); j++) {
+    //             cout << caminhos[day][k][j] << ",";
+    //         }
+    //         cout << "\t";
+    //     }
+    //     cout << endl;
+    // }
+    // cout << endl;
+
+    long value = 1;
+
+    if (day == 0) {
+        return value;
+    } else {
+        value *= caminhos[day][k].size();
+        for (int i = 0; i < caminhos[day][k].size(); i++) {
+            value *= contaCaminhos(day - 1, caminhos[day][k][i]);
+        }
+        return value;
+    }
+}
+
 void task3() {
+    dp = vector<vector<long>>(D, vector<long>(K + 1, 0));
+
     for (int i = 0; i < N; i++) {
-        num_a = 0;
-        // dp
-        dp = vector<vector<long>>(D, vector<long>(2, -1));
-        history = vector<long>(D, 0);
-
-        // history
-        max_profit = maxProfit(i, 0, 1);
-        bestSequence(i);
-
-        // possibilities
-        // possibilidades = 1;
-        // maxcombinations(i);
-        possibilidades = maxPossibilities(i);
-        cout << max_profit << " " << possibilidades << endl;
+        caminhos.clear();
+        profit = bottomUp3(i);
+        long num = contaCaminhos(D - 1, 0);
+        cout << profit << " " << num << endl;
     }
 }
 
